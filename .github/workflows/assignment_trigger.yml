@@ -1,62 +1,41 @@
 name: PL-SQL Trigger Autograding
 
 on:
-push:
-pull_request:
-workflow_dispatch:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-autograding:
-runs-on: ubuntu-latest
+  autograding:
+    runs-on: ubuntu-latest
 
-```
-steps:
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  - name: Checkout Repository
-    uses: actions/checkout@v4
+      - name: Show Repository Structure
+        run: |
+          echo "Repository files:"
+          find . -maxdepth 4 -type f | sort
 
-  - name: Show Repository Structure
-    run: |
-      echo "=========================================="
-      echo "Repository files:"
-      echo "=========================================="
-      find . -maxdepth 4 -type f | sort
+      - name: Find and Run Test
+        run: |
+          echo "Searching for test.sh..."
 
-  - name: Find Assignment Files
-    run: |
-      echo "=========================================="
-      echo "Searching for answers.sql..."
-      echo "=========================================="
+          TEST_FILE=$(find . -name "test.sh" -type f | head -n 1)
 
-      ANSWER_FILE=$(find . -name "answers.sql" -type f | head -n 1)
+          if [ -z "$TEST_FILE" ]; then
+            echo "ERROR: test.sh not found"
+            exit 1
+          fi
 
-      if [ -z "$ANSWER_FILE" ]; then
-        echo "ERROR: answers.sql not found."
-        exit 1
-      fi
+          echo "Found test file:"
+          echo "$TEST_FILE"
 
-      echo "answers.sql found at:"
-      echo "$ANSWER_FILE"
+          chmod +x "$TEST_FILE"
 
-      TEST_FILE=$(find . -name "test.sh" -type f | head -n 1)
+          TEST_DIR=$(dirname "$TEST_FILE")
 
-      if [ -z "$TEST_FILE" ]; then
-        echo "ERROR: test.sh not found."
-        exit 1
-      fi
+          cd "$TEST_DIR"
 
-      echo "test.sh found at:"
-      echo "$TEST_FILE"
-
-      chmod +x "$TEST_FILE"
-
-      echo "=========================================="
-      echo "Running autograding..."
-      echo "=========================================="
-
-      TEST_DIR=$(dirname "$TEST_FILE")
-
-      cd "$TEST_DIR"
-
-      ./test.sh
-```
+          ./test.sh
